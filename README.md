@@ -54,3 +54,11 @@ So if you want to add arguments to Rofi, you can do so with the content of the f
 ```bash
 ROFI_BIN="$(command -v rofi) -theme /usr/share/rofi/themes/fancy.rasi"
 ```
+If you are trying to use the `-theme-str` option with spaces then note that bash will most likely split your one argument up into many arguments which rofi then won't understand. To avoid this, you can strip all spaces from the theme string as follows:
+
+```bash
+THEME_OVERRIDE="* {width: 960px;} window {height: 460px;}"
+# Strip spaces to stop bash splitting the variable
+THEME_OVERRIDE=$(echo "${THEME_OVERRIDE}" | tr -d ' ')
+ROFI_BIN="$(command -v rofi) -theme-str ${THEME_OVERRIDE}
+```
