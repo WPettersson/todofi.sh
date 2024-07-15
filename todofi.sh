@@ -67,6 +67,10 @@ runtodo() {
     TODOTXT_VERBOSE=0 runtodo_verbose "$@"
 }
 
+lines() {
+    echo "-theme-str listview{lines:$1;}"
+}
+
 list() {
     case $KIND in
       "all")
@@ -95,12 +99,13 @@ confirm() {
     context=$2
     message="Confirm $action ?"
 
+    LINES=$(lines 2)
     # Todo: remove duplicate code...
     if [[ $context ]]; then
         mesg="Item: <span foreground=\"${COLOR_ITEM}\">${context}</span>"
-        response=$(echo -e "Yes\nNo" | $ROFI_BIN -lines 2 -u 0 -a 1 -dmenu -mesg "$mesg" -i -p "$message")
+        response=$(echo -e "Yes\nNo" | $ROFI_BIN ${LINES} -u 0 -a 1 -dmenu -mesg "$mesg" -i -p "$message")
     else
-        response=$(echo -e "Yes\nNo" | $ROFI_BIN -lines 2 -u 0 -a 1 -dmenu -i -p "$message")
+        response=$(echo -e "Yes\nNo" | $ROFI_BIN ${LINES} -u 0 -a 1 -dmenu -i -p "$message")
     fi
 
     if [[ "$response" == "Yes" ]]; then
@@ -111,8 +116,9 @@ confirm() {
 }
 
 add() {
+    LINES=$(lines 1)
     projcon=`getprojconheader`
-    new_todo=$(echo -e "< Cancel" | runrofi -lines 1 -dmenu -mesg "New todo
+    new_todo=$(echo -e "< Cancel" | runrofi ${LINES} -dmenu -mesg "New todo
 ${projcon}" -p "> ")
 
     if [[ "$new_todo" != "" ]]; then
@@ -191,7 +197,8 @@ edit() {
     current_line=`unhighlight "$2"`
     current_line=`extractcontent "${current_line}"`
     projcon=`getprojconheader`
-    todo=$(runrofi -lines 0 -dmenu -mesg "Edit todo
+    LINES=$(lines 0)
+    todo=$(runrofi ${LINES} -dmenu -mesg "Edit todo
 ${projcon}" -p "> " -filter "$current_line")
     if [[ -n "$todo" ]]; then
         runtodo replace "$lineno" "$todo"
@@ -213,7 +220,8 @@ option() {
             selection=$(echo -e "Not implemented" | runrofi -sep "|" -kb-accept-entry "Return" -mesg "Item: ${current_line}" -dmenu -p "Action")
             break
         else
-            selection=$(echo -e "1. Mark Done|2. Edit|3. Edit priority|4. Remove priority|5. Delete" | runrofi -lines 5 -sep "|" -u 4 -a 0 -kb-accept-entry "Return" -mesg "Item: ${current_line}" -dmenu -p "Action")
+            LINES=$(lines 5)
+            selection=$(echo -e "1. Mark Done|2. Edit|3. Edit priority|4. Remove priority|5. Delete" | runrofi ${LINES} -sep "|" -u 4 -a 0 -kb-accept-entry "Return" -mesg "Item: ${current_line}" -dmenu -p "Action")
             lineno=`getlinenumber "$current_line"`
 
             case "${selection:0:1}" in
@@ -249,7 +257,8 @@ Ex:
   * Display only tasks that contains FOO: <span color='${COLOR_EXAMPLE}'>FOO</span>
   * Display only tasks that contains FOO or BAR: <span color='${COLOR_EXAMPLE}'>FOO|BAR</span>
   * Hide tasks that do not contains FOO: <span color='${COLOR_EXAMPLE}'>-FOO</span>"
-    FILTER=$(runrofi -format f -lines 0 -kb-accept-entry "Return" -mesg "${HEADER}" -dmenu -p "Term" -filter "$FILTER")
+    LINES=$(lines 0)
+    FILTER=$(runrofi -format f ${LINES} -kb-accept-entry "Return" -mesg "${HEADER}" -dmenu -p "Term" -filter "$FILTER")
 
     savefilter
 }
@@ -282,7 +291,7 @@ linescount() {
     if [[ $LINES_MODE == 'auto' ]]; then
         count=$(($count < $LINES_MIN ? $LINES_MIN : $count))
         count=$(($count > $LINES_MAX ? $LINES_MAX : $count))
-        echo "-lines $count"
+        lines $count
     fi
 }
 
@@ -292,10 +301,10 @@ config() {
     HELP="${TODOFISH_HEADER} - Configuration files"
 
     source $TODOTXT_CFG_FILE
-
+    LINES=$(lines 3)
     selection=$(
         echo -e "1. Open todo.txt config file (${TODOTXT_CFG_FILE})|2. Open todofish config file (${CONFIG_FILE})|3. Open current filter file (${FILTER_FILE})" | \
-        runrofi -sep "|" -lines 3 -u 0 -a 1 -kb-accept-entry "Return" -mesg "${HELP}" -dmenu -p "Action"
+        runrofi -sep "|" ${LINES} -u 0 -a 1 -kb-accept-entry "Return" -mesg "${HELP}" -dmenu -p "Action"
     )
     val=$?
 
@@ -325,10 +334,10 @@ help() {
 Todo.txt format: https://github.com/todotxt/todo.txt"
 
     source $TODOTXT_CFG_FILE
-
+    LINES=$(lines 6)
     selection=$(
         echo -e "1. Archive|2. Deduplicate|3. Report|4. Open todo.txt (${TODO_FILE})|5. Open done.txt (${DONE_FILE})|6. See configuration files" | \
-        runrofi -sep "|" -lines 6 -u 0 -a 1 -kb-accept-entry "Return" -mesg "${HELP}" -dmenu -p "Action"
+        runrofi -sep "|" ${LINES} -u 0 -a 1 -kb-accept-entry "Return" -mesg "${HELP}" -dmenu -p "Action"
     )
     val=$?
 
